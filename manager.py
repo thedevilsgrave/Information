@@ -26,8 +26,6 @@ class Config(object):
     PERMANENT_SESSION_LIFETIME = 86300 * 2
 
 
-
-
 app = Flask(__name__)
 app.config.from_object(Config)
 # 初始化Mysql数据库对象
