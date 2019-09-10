@@ -8,9 +8,9 @@ from flask_wtf import CSRFProtect
 from redis import StrictRedis
 
 from config import config_dict
-from logic.modules.index import index_blu
 
 db = SQLAlchemy()
+redis_store = None
 
 
 def setup_log(config_name):
@@ -35,12 +35,15 @@ def create_app(config_name):
     # 初始化Mysql数据库对象
     db.init_app(app)
     # 初始化Redis数据库对象
+    # 声明redis_store为全局变量
+    global redis_store
     redis_store = StrictRedis(host=config_dict[config_name].REDIS_HOST, port=config_dict[config_name].REDIS_PORT)
     # 开启CSRF保护
     CSRFProtect(app)
     # 设置 指定session保存位置
     Session(app)
     # 注册蓝图
+    from logic.modules.index import index_blu
     app.register_blueprint(index_blu)
 
     return app
