@@ -46,4 +46,7 @@ def create_app(config_name):
     from logic.modules.index import index_blu
     app.register_blueprint(index_blu)
 
+    from logic.modules.logter import logter_blu
+    app.register_blueprint(logter_blu)
+
     return app
