@@ -19,7 +19,7 @@ def get_image_code():
     name, text, picture = captcha.generate_captcha()
     # 4.保存图片验证码和带过来的参数到redis
     try:
-        redis_store.set("imageCodeID_"+image_code_id, text, constants.IMAGE_CODE_REDIS_EXPIRES)
+        redis_store.setex("imageCodeID_"+image_code_id, 300, text)
     except Exception as err:
         current_app.logger.error(err)
         abort(500)
@@ -29,7 +29,7 @@ def get_image_code():
     return response
 
 
-@logter_blu.route("/sms_code", method=["POST"])
+@logter_blu.route("/sms_code", methods=["POST"])
 def send_sms_code():
     """发送短信验证码并返回"""
     # 1. 接收浏览器请求过来的参数：手机号，图片验证码编号，用户输入的图片验证码的内容
@@ -44,18 +44,21 @@ def send_sms_code():
     if not all([mobile, image_code, image_code_id]):
         return jsonify(errno="4100", errmsg="参数错误")
     # 校验手机号是否输入正确
-    if not re.match('1[3589]//d{9}', mobile):
+    if not re.match("^1[3578][0-9]{9}$", mobile):
         return jsonify(errno="4105", errmsg="参数错误")
 
     # 3. 从redis中取出对应的图片验证码准确的内容
     try:
-        real_code = redis_store.get("ImageCodeId"+image_code_id)
+        real_code = redis_store.get("imageCodeID_"+image_code_id)
     except Exception as err:
         current_app.logger.error(err)
+
+    # 判断验证码是否已过期
+    if not real_code:
         return jsonify(errno="4110", errmsg="图片验证码已过期")
 
     # 4. 与用户输入的验证码对比
-    if real_code.upper() != image_code.upper():
+    if real_code.lower() != image_code.lower():
         return jsonify(errno="4200", errmsg="验证码输入错误")
 
     # 5. 如果验证通过，生成短信验证码
@@ -70,7 +73,7 @@ def send_sms_code():
         return jsonify(errno="4008", errmsg="数据保存失败")
 
     # 6. 通过第三方平台将验证码发给用户，并告知发送结果
-    result = CCP.send_template_sms('18799791353', [sms_code_str, 5], 1)
+    result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
     if result != 0:
         return jsonify(errno="4003", errmsg="发送短信失败！")
 
