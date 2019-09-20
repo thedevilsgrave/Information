@@ -1,10 +1,11 @@
-from flask import request, abort, current_app, make_response, json, jsonify
+from flask import request, abort, current_app, make_response, json, jsonify, session
 from logic.tools.captcha.captcha import captcha
 from logic.libs.yuntongxun.sms import CCP
 from . import logter_blu
 from logic import redis_store
 from logic import constants
 import re, random
+from logic.models import *
 
 
 @logter_blu.route("/image_code")
@@ -64,6 +65,7 @@ def send_sms_code():
     # 5. 如果验证通过，生成短信验证码
     # 随机数字，并保证有6位数长度
     sms_code_str = "%06d" % random.randint(0, 99999)
+    current_app.logger.debug("短信验证码的内容是 %s" % sms_code_str)
 
     # 将验证码保存到redis中
     try:
@@ -73,9 +75,62 @@ def send_sms_code():
         return jsonify(errno="4008", errmsg="数据保存失败")
 
     # 6. 通过第三方平台将验证码发给用户，并告知发送结果
-    result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
-    if result != 0:
-        return jsonify(errno="4003", errmsg="发送短信失败！")
+    # result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
+    # if result != 0:
+    #     return jsonify(errno="4003", errmsg="发送短信失败！")
 
     return jsonify(errno="2000", errmsg="发送成功！")
+
+
+@logter_blu.route("/register", methods=["POST"])
+def register():
+    """注册逻辑"""
+
+    # 1. 获取参数
+    parameter_dict = request.json
+    mobile = parameter_dict.get("mobile")
+    smscode = parameter_dict.get("smscode")
+    password = parameter_dict.get("password")
+
+    # 2. 校验参数
+    if not all([mobile, smscode, password]):
+        return jsonify(errno="4100", errmsg="参数错误")
+
+    # 3. 获取数据库中保存的短信验证码
+    try:
+        real_sms_code = redis_store.get("SMS_"+mobile)
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="4005", errmsg="数据查询失败")
+    if not real_sms_code:
+        return jsonify(errno="4110", errmsg="图片验证码已过期")
+
+    # 4. 校验验证码
+    if real_sms_code != smscode:
+        return jsonify(errno="4200", errmsg="验证码输入错误")
+
+    # 5. 初始化用户模型，并赋值
+    user = User()
+    user.mobile = mobile
+    user.last_login = datetime.now()
+    # TODO 对密码做处理
+
+    # 用户昵称默认为手机号
+    user.nick_name = mobile
+
+    # 6. 将用户模型添加到数据库
+    # try:
+    #     db.session.add(user)
+    #     db.session.commit()
+    # except Exception as err:
+    #     current_app.logger.error(err)
+    #     db.session.rollback()
+    #     return jsonify(errno="4008", errmsg="数据保存失败")
+    # # 注册成功后自动登录
+    # session["user_id"] = user.id
+    # session["user_phone"] = user.mobile
+    # session["user_name"] = user.nick_name
+
+    # 7. 返回响应
+    return jsonify(errno="2000", errmsg="注册成功！")
 
