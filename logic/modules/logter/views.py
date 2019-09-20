@@ -75,9 +75,9 @@ def send_sms_code():
         return jsonify(errno="4008", errmsg="数据保存失败")
 
     # 6. 通过第三方平台将验证码发给用户，并告知发送结果
-    result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
-    if result != 0:
-        return jsonify(errno="4003", errmsg="发送短信失败！")
+    # result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
+    # if result != 0:
+    #     return jsonify(errno="4003", errmsg="发送短信失败！")
 
     return jsonify(errno="2000", errmsg="发送成功！")
 

@@ -165,9 +165,9 @@ $(function(){
             data: JSON.stringify(params),
             contentType: "application/json",
             success:function (resp) {
-                if (resp=="0"){
+                if (resp.errno=="2000"){
                     // 代表注册成功
-
+                    location.reload()
                 }else {
                     // 代表注册失败
                     $("#register-password-err").html(resp.errmsg);
