@@ -75,9 +75,9 @@ def send_sms_code():
         return jsonify(errno="4008", errmsg="数据保存失败")
 
     # 6. 通过第三方平台将验证码发给用户，并告知发送结果
-    # result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
-    # if result != 0:
-    #     return jsonify(errno="4003", errmsg="发送短信失败！")
+    result = CCP().send_template_sms(mobile, [sms_code_str, constants.SMS_CODE_REDIS_EXPIRES / 60], "1")
+    if result != 0:
+        return jsonify(errno="4003", errmsg="发送短信失败！")
 
     return jsonify(errno="2000", errmsg="发送成功！")
 
@@ -113,23 +113,24 @@ def register():
     user = User()
     user.mobile = mobile
     user.last_login = datetime.now()
-    # TODO 对密码做处理
+    # 对密码做处理
+    user.password = password
 
     # 用户昵称默认为手机号
     user.nick_name = mobile
 
     # 6. 将用户模型添加到数据库
-    # try:
-    #     db.session.add(user)
-    #     db.session.commit()
-    # except Exception as err:
-    #     current_app.logger.error(err)
-    #     db.session.rollback()
-    #     return jsonify(errno="4008", errmsg="数据保存失败")
-    # # 注册成功后自动登录
-    # session["user_id"] = user.id
-    # session["user_phone"] = user.mobile
-    # session["user_name"] = user.nick_name
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as err:
+        current_app.logger.error(err)
+        db.session.rollback()
+        return jsonify(errno="4008", errmsg="数据保存失败")
+    # 注册成功后自动登录
+    session["user_id"] = user.id
+    session["user_phone"] = user.mobile
+    session["user_name"] = user.nick_name
 
     # 7. 返回响应
     return jsonify(errno="2000", errmsg="注册成功！")
