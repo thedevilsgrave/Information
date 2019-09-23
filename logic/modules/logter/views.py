@@ -167,6 +167,13 @@ def login():
     session["user_id"] = user.id
     session["user_phone"] = user.mobile
     session["user_name"] = user.nick_name
+    # 设置用户最后一次登录时间
+    user.last_login = datetime.now()
+    # try:
+    #     db.session.commit()
+    # except Exception as err:
+    #     db.session.rollback()
+    #     current_app.logger.error(err)
 
     # 4. 返回响应
     return jsonify(errno="2000", errmsg="登录成功!")
