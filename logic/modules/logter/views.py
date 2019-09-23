@@ -135,3 +135,38 @@ def register():
     # 7. 返回响应
     return jsonify(errno="2000", errmsg="注册成功！")
 
+
+@logter_blu.route("/login", methods=["POST"])
+def login():
+    """登录"""
+    # 1. 获取参数
+    params_dict = request.json
+    mobile = params_dict.get("mobile")
+    password = params_dict.get("password")
+
+    # 2. 校验参数
+    if not all([mobile, password]):
+        return jsonify(errno="4100", errmsg="参数错误")
+    # 2.1 校验手机号是否输入正确
+    if not re.match("^1[3578][0-9]{9}$", mobile):
+        return jsonify(errno="4105", errmsg="参数错误")
+    # 2.2 查询数据库中是否有这个用户
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="4005", errmsg="用户不存在")
+    # 判断用户是否存在
+    if not user:
+        return jsonify(errno="4050", errmsg="用户不存在!")
+    # 校验密码
+    if not user.check_passowrd(password):
+        return jsonify(errno="4300", errmsg="用户或密码错误!")
+
+    # 3. 保存用户登录状态
+    session["user_id"] = user.id
+    session["user_phone"] = user.mobile
+    session["user_name"] = user.nick_name
+
+    # 4. 返回响应
+    return jsonify(errno="2000", errmsg="登录成功!")
