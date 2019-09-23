@@ -140,7 +140,6 @@ $(function(){
         })
     })
 
-
     // 注册按钮点击
     $(".register_form_con").submit(function (e) {
         // 阻止默认提交操作
@@ -307,3 +306,17 @@ function generateUUID() {
     });
     return uuid;
 }
+
+
+// 点击退出登录
+function logout() {
+    $.ajax({
+        url: "/passport/logout",
+        type: "post",
+        contentType: "application/json",
+        success: function (resp) {
+            // 刷新当前界面
+            location.reload()
+            }
+        })
+    }

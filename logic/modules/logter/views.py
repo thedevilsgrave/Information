@@ -170,3 +170,14 @@ def login():
 
     # 4. 返回响应
     return jsonify(errno="2000", errmsg="登录成功!")
+
+
+@logter_blu.route("/logout", methods=["POST"])
+def logout():
+    """退出登录"""
+    # pop是移除session 中的数据
+    # pop会有一个返回值,如果要移除的key没有他会返回一个None
+    session.pop("user_id", None)
+    session.pop("user_phone", None)
+    session.pop("user_name", None)
+    return jsonify(errno="2100", errmsg="退出成功!")
