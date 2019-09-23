@@ -5,6 +5,7 @@ from flask import Flask
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 
 from config import config_dict
@@ -40,8 +41,21 @@ def create_app(config_name):
     redis_store = StrictRedis(host=config_dict[config_name].REDIS_HOST,
                               port=config_dict[config_name].REDIS_PORT,
                               decode_responses=True)
+
     # 开启CSRF保护
-    # CSRFProtect(app)
+    # 它已经帮我们做好了:从cookie中取出随机值,从表单中取出随机值,和校验的功能
+    # 我们需要做:  设置cookie中的随机值,设置表单中的随机值
+    CSRFProtect(app)
+
+    @app.after_request
+    def after_request(response):
+        # 在返回响应之前可以设置csrf_token
+        csrf_token = generate_csrf()
+        response.set_cookie("csrf_token", csrf_token)
+        return response
+        # 然而我们不是使用的表单提交,而是使用ajax提交
+        # 所以需要在ajax请求时带上csrf_token
+
     # 设置 指定session保存位置
     Session(app)
     # 注册蓝图

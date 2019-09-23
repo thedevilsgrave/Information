@@ -126,6 +126,9 @@ $(function(){
             url: "/passport/login",
             method: "post",
             data: JSON.stringify(params),
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             contentType: "application/json",
             success:function (respon) {
                 if (respon.errno == "2000"){
@@ -182,6 +185,9 @@ $(function(){
             url: "/passport/register",
             method: "post",
             data: JSON.stringify(params),
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
             contentType: "application/json",
             success:function (resp) {
                 if (resp.errno=="2000"){
@@ -245,6 +251,9 @@ function sendSMSCode() {
         // 请求数据格式
         data: JSON.stringify(params),
         contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
         success: function (response) {
             if (response.errno == "2000"){
                 // 如果响应的状态码是2000代表成功
@@ -313,6 +322,9 @@ function logout() {
     $.ajax({
         url: "/passport/logout",
         type: "post",
+        headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
         contentType: "application/json",
         success: function (resp) {
             // 刷新当前界面
