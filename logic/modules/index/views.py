@@ -1,7 +1,7 @@
 from flask import render_template, current_app, session, request
 from flask.json import jsonify
 
-from logic.models import User, News
+from logic.models import User, News, Category
 from . import index_blu
 from logic import redis_store
 
@@ -32,9 +32,17 @@ def index():
     for news in news_list:
         news_dict.append(news.to_basic_dict())
 
+    # 查询分类数据,通过模板渲染出来
+    kinds = Category.query.all()
+
+    kinds_list = []
+    for kind in kinds:
+        kinds_list.append(kind.to_dict())
+
     data = {
         "user": user.to_dict() if user else None,
-        "news_list": news_dict
+        "news_list": news_dict,
+        "news_kind": kinds_list
     }
 
     return render_template("news/index.html", data=data)

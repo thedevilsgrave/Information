@@ -6,25 +6,29 @@ var data_querying = true;   // 是否正在向后台获取数据
 
 $(function () {
     // 界面加载完成后去请求新闻数据
-    updateNewsData()
+    updateNewsData();
     // 首页分类切换
     $('.menu li').click(function () {
-        var clickCid = $(this).attr('data-cid')
+        // 取到当前点击分类的cid
+        var clickCid = $(this).attr('data-cid');
+        // 遍历全部li标签,移除active这个显示属性
         $('.menu li').each(function () {
             $(this).removeClass('active')
-        })
-        $(this).addClass('active')
+        });
+        // 再将当前点击的分类添加active这个属性
+        $(this).addClass('active');
 
-        if (clickCid != currentCid) {
+        // 如果点击的分类与当前分类不一样
+        if ( clickCid != currentCid ) {
             // 记录当前分类id
-            currentCid = clickCid
+            currentCid = clickCid;
 
             // 重置分页参数
-            cur_page = 1
-            total_page = 1
+            cur_page = 1;
+            total_page = 1;
             updateNewsData()
         }
-    })
+    });
 
     //页面滚动加载相关
     $(window).scroll(function () {
@@ -56,13 +60,13 @@ $(function () {
             }
         }
     })
-})
+});
 
 function updateNewsData() {
     var params = {
         "page": cur_page,
         "cid": currentCid,
-    }
+    };
     $.get("/news_list", params, function (resp) {
         // 数据加载完毕,设置[正在加载数据]变量为false代表当前没有在加载数据
         data_querying = false;
