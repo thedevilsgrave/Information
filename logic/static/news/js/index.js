@@ -42,7 +42,18 @@ $(function () {
         var nowScroll = $(document).scrollTop();
 
         if ((canScrollHeight - nowScroll) < 100) {
-            // TODO 判断页数，去更新新闻数据
+            //  判断页数，去更新新闻数据
+            if (!data_querying){
+                data_querying = true;
+
+                // 如果当前页数小于总页数才会加载
+                if (cur_page < total_page){
+                    cur_page += 1;
+                    // 加载数据
+                    updateNewsData()
+                }
+
+            }
         }
     })
 })
@@ -53,12 +64,18 @@ function updateNewsData() {
         "cid": currentCid,
     }
     $.get("/news_list", params, function (resp) {
+        // 数据加载完毕,设置[正在加载数据]变量为false代表当前没有在加载数据
+        data_querying = false;
         if (resp.errno == "2000") {
+            // 给总页面数据赋值
+            total_page = resp.data.totalPage;
             // 先清空原有数据
-            $(".list_con").html('')
+            if (cur_page == 1) {
+                $(".list_con").html('')
+            }
             // 显示数据
             for (var i=0;i<resp.data.newsList.length;i++) {
-                var news = resp.data.newsList[i]
+                var news = resp.data.newsList[i];
                 var content = '<li>'
                 content += '<a href="#" class="news_pic fl"><img src="' + news.index_image_url + '?imageView2/1/w/170/h/170"></a>'
                 content += '<a href="#" class="news_title fl">' + news.title + '</a>'
