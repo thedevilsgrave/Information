@@ -1,6 +1,6 @@
 from flask import render_template, current_app, session
 
-from logic.models import User
+from logic.models import User, News
 from . import index_blu
 from logic import redis_store
 
@@ -20,8 +20,20 @@ def index():
         except Exception as err:
             current_app.logger.error(err)
 
+    news_list = []
+
+    try:
+        news_list = News.query.order_by(News.clicks.desc()).limit(6)
+    except Exception as err:
+        current_app.logger.error(err)
+
+    news_dict = []
+    for news in news_list:
+        news_dict.append(news.to_basic_dict())
+
     data = {
-        "user": user.to_dict() if user else None
+        "user": user.to_dict() if user else None,
+        "news_list": news_dict
     }
 
     return render_template("news/index.html", data=data)
