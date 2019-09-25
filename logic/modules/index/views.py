@@ -1,25 +1,27 @@
-from flask import render_template, current_app, session, request
+from flask import render_template, current_app, session, request, g
 from flask.json import jsonify
-
+from logic.tools.common import user_login_data
 from logic.models import User, News, Category
 from . import index_blu
 from logic import redis_store
 
 
 @index_blu.route('/')
+@user_login_data
 def index():
     """显示主页面"""
     # 1. 如果用户已登录,则将数据库中数据查出替换模板
     # 1.1 取到用户id
-    user_id = session.get("user_id", None)
-    user = None
-
-    if user_id:
-        # 尝试查询用户模型
-        try:
-            user = User.query.get(user_id)
-        except Exception as err:
-            current_app.logger.error(err)
+    # user_id = session.get("user_id", None)
+    # user = None
+    #
+    # if user_id:
+    #     # 尝试查询用户模型
+    #     try:
+    #         user = User.query.get(user_id)
+    #     except Exception as err:
+    #         current_app.logger.error(err)
+    user = g.user
 
     news_list = []
 

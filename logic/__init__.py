@@ -9,7 +9,7 @@ from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 
 from config import config_dict
-from logic.tools.common import do_index_class
+
 
 db = SQLAlchemy()
 redis_store = None
@@ -58,6 +58,7 @@ def create_app(config_name):
         # 所以需要在ajax请求时带上csrf_token
 
     # 将自定义模板过滤器添加到app中
+    from logic.tools.common import do_index_class
     app.add_template_filter(do_index_class, "index_class")
 
     # 设置 指定session保存位置
