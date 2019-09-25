@@ -69,4 +69,7 @@ def create_app(config_name):
     from logic.modules.logter import logter_blu
     app.register_blueprint(logter_blu)
 
+    from logic.modules.news import news_blu
+    app.register_blueprint(news_blu)
+
     return app
