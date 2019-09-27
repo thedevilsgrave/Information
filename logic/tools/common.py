@@ -31,7 +31,7 @@ def do_index_class(index):
 
 
 def user_login_data(f):
-    @functools.wraps(f)
+    @functools.wraps(f)      # 使用functools去装饰内层函数,可以保持装饰的当前函数的"__name__"不变
     def wappwer(*args, **kwargs):
         user_id = session.get("user_id", None)
         user = None

@@ -1,5 +1,5 @@
 from logic.modules.news import news_blu
-from flask import render_template, current_app, session, request, g
+from flask import render_template, current_app, session, request, g, abort
 from logic.models import User, News, Category
 from logic.tools.common import user_login_data
 
@@ -18,12 +18,26 @@ def news_detail(news_id):
     except Exception as err:
         current_app.logger.error(err)
 
+    # 查询新闻数据
+    news = None
+
+    try:
+        news = News.query.get(news_id)
+    except Exception as err:
+        current_app.logger.error(err)
+
+    if not news:
+        abort(404)
+    # 新闻点击次数更新
+    news.clicks += 1
+
     news_dict = []
-    for news in news_list:
-        news_dict.append(news.to_basic_dict())
+    for new in news_list:
+        news_dict.append(new.to_basic_dict())
     data = {
         "user": user.to_dict() if user else None,
-        "news_list": news_dict
+        "news_list": news_dict,
+        "news": news.to_dict()
     }
     return render_template("news/detail.html", data=data)
 
