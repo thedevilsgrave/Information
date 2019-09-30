@@ -1,6 +1,7 @@
+from logic import db
 from logic.modules.news import news_blu
 from flask import render_template, current_app, session, request, g, abort, jsonify, json
-from logic.models import User, News, Category
+from logic.models import User, News, Category, Comment
 from logic.tools.common import user_login_data
 
 
@@ -39,6 +40,17 @@ def news_detail(news_id):
         if news in user.collection_news:
             is_liked = True
 
+    # 查评论数据
+    comments = []
+    try:
+        comments = Comment.query.filter(Comment.news_id == news.id).order_by(Comment.create_time.desc()).all()
+    except Exception as err:
+        current_app.logger.error(err)
+
+    comment_dict_li = []
+    for comment in comments:
+        comment_dict_li.append(comment.to_dict())
+
     news_dict = []
     for new in news_list:
         news_dict.append(new.to_basic_dict())
@@ -46,7 +58,8 @@ def news_detail(news_id):
         "user": user.to_dict() if user else None,
         "news_list": news_dict,
         "news": news.to_dict(),
-        "is_liked": is_liked
+        "is_liked": is_liked,
+        "comments": comment_dict_li
     }
     return render_template("news/detail.html", data=data)
 
@@ -97,4 +110,55 @@ def news_liked():
             user.collection_news.append(news)
 
     return jsonify(errno="2000", errmsg="收藏成功!")
+
+
+@news_blu.route("/news_comment", methods=["POST"])
+@user_login_data
+def comment_news():
+    """新闻评论&评论的评论"""
+    user = g.user
+
+    if not user:
+        return jsonify(errno="5465", errmsg="用户未登录")
+
+    # 1. 接收参数
+    news_id = request.json.get("news_id")
+    comment_contents = request.json.get("comment")
+    parent_id = request.json.get("parent_id")
+
+    # 2. 判断参数
+    if not all([news_id, comment_contents]):
+        return jsonify(errno="5000", errmsg="参数错误")
+
+    try:
+        news_id = int(news_id)
+        # parent_id = int(parent_id)
+    except Exception as err:
+        return jsonify(errno="5000", errmsg="参数错误")
+    # 3.查询新闻,并判断新闻是否存在
+    try:
+        news = News.query.get(news_id)
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="5000", errmsg="参数错误")
+
+    if not news:
+        return jsonify(errno="4500", errmsg="未查询到新闻数据")
+
+    # 3. 创建评论模型,添加到数据库
+    comment = Comment()
+
+    comment.user_id = user.id
+    comment.news_id = news.id
+    comment.content = comment_contents
+    if parent_id:
+        comment.parent_id = parent_id
+    try:
+        db.session.add(comment)
+        db.session.commit()
+    except Exception as err:
+        current_app.logger.error(err)
+        db .session.rollback()
+
+    return jsonify(errno="2000", errmsg="OK", data=comment.to_dict())
 
