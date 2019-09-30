@@ -47,9 +47,27 @@ def news_detail(news_id):
     except Exception as err:
         current_app.logger.error(err)
 
+    # 需求:查询当前用户在当前新闻点赞了那几条评论
+    comment_like_ids = []
+    try:
+        if g.user:
+            # 1. 查询出所有的新闻评论的id
+            comment_ids = [comment.id for comment in comments]
+            # 2. 再查询出这些评论中有那些被用户点赞
+            comment_likes = CommentLike.query.filter(CommentLike.comment_id.in_(comment_ids),
+                                                     CommentLike.user_id == g.user.id)
+            # 3. 取到所有被用户点赞的评论id
+            comment_like_ids = [comment_liked.comment_id for comment_liked in comment_likes]
+    except Exception as err:
+        current_app.logger.error(err)
+
     comment_dict_li = []
     for comment in comments:
-        comment_dict_li.append(comment.to_dict())
+        comment_dict = comment.to_dict()
+        comment_dict["is_liked"] = False
+        if comment.id in comment_like_ids:
+            comment_dict["is_liked"] = True
+        comment_dict_li.append(comment_dict)
 
     news_dict = []
     for new in news_list:
@@ -163,7 +181,7 @@ def comment_news():
     return jsonify(errno="2000", errmsg="OK", data=comment.to_dict())
 
 
-@news_blu.route("/comment_like")
+@news_blu.route("/comment_like", methods=["POST"])
 @user_login_data
 def comment_like():
     """评论点赞与取消点赞"""
@@ -180,7 +198,7 @@ def comment_like():
     action = request.json.get("action")
 
     # 判断参数
-    if not all([news_id, comment_id, action]):
+    if not all([comment_id, action]):
         return jsonify(errno="5000", errmsg="参数错误")
 
     if action not in ["add", "remove"]:
@@ -209,7 +227,7 @@ def comment_like():
         comment_like_model = CommentLike.query.filter(CommentLike.user_id == user.id,
                                                       CommentLike.comment_id == comment.id).first()
         if comment_like_model:
-            comment_like_model.delete()
+            db.session.delete(comment_like_model)
             comment.like_count -= 1
     try:
         db.session.commit()
