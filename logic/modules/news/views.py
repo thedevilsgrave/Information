@@ -204,11 +204,13 @@ def comment_like():
             comment_like_model.user_id = user.id
             comment_like_model.comment_id = comment.id
             db.session.add(comment_like_model)
+            comment.like_count += 1
     else:     # 取消点赞
         comment_like_model = CommentLike.query.filter(CommentLike.user_id == user.id,
                                                       CommentLike.comment_id == comment.id).first()
         if comment_like_model:
-            db.session.delete()
+            comment_like_model.delete()
+            comment.like_count -= 1
     try:
         db.session.commit()
     except Exception as err:
