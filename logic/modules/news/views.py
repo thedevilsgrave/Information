@@ -1,7 +1,7 @@
 from logic import db
 from logic.modules.news import news_blu
 from flask import render_template, current_app, session, request, g, abort, jsonify, json
-from logic.models import User, News, Category, Comment
+from logic.models import User, News, Category, Comment, CommentLike
 from logic.tools.common import user_login_data
 
 
@@ -161,4 +161,59 @@ def comment_news():
         db .session.rollback()
 
     return jsonify(errno="2000", errmsg="OK", data=comment.to_dict())
+
+
+@news_blu.route("/comment_like")
+@user_login_data
+def comment_like():
+    """评论点赞与取消点赞"""
+
+    # 获取参数
+    user = g.user
+
+    if not user:
+        return jsonify(errno="5465", errmsg="用户未登录")
+
+    # 1. 接收参数
+    news_id = request.json.get("news_id")
+    comment_id = request.json.get("comment_id")
+    action = request.json.get("action")
+
+    # 判断参数
+    if not all([news_id, comment_id, action]):
+        return jsonify(errno="5000", errmsg="参数错误")
+
+    if action not in ["add", "remove"]:
+        return jsonify(errno="5000", errmsg="参数错误")
+
+    # 查询评论数据
+    try:
+        comment = Comment.query.get(comment_id)
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="5000", errmsg="参数错误")
+
+    if not comment:
+        return jsonify(errno="4500", errmsg="评论不存在")
+
+    if action == "add":
+        comment_like_model = CommentLike.query.filter(CommentLike.user_id == user.id,
+                                                      CommentLike.comment_id == comment.id).first()
+        if not comment_like_model:
+            comment_like_model = CommentLike()
+            comment_like_model.user_id = user.id
+            comment_like_model.comment_id = comment.id
+            db.session.add(comment_like_model)
+    else:     # 取消点赞
+        comment_like_model = CommentLike.query.filter(CommentLike.user_id == user.id,
+                                                      CommentLike.comment_id == comment.id).first()
+        if comment_like_model:
+            db.session.delete()
+    try:
+        db.session.commit()
+    except Exception as err:
+        db.session.rollback(err)
+        current_app.logger.error(err)
+        return jsonify(errno="5100", errmsg="数据库操作失败")
+    return jsonify(errno="2000", errmsg="点赞成功!")
 
