@@ -131,7 +131,8 @@ $(function(){
                     // 让comment_sub 失去焦点
                     $('.comment_sub').blur();
                     // 清空输入框内容
-                    $(".comment_input").val("")
+                    $(".comment_input").val("");
+                    updateCommentQuantity()
                 }else {
                     alert(resp.errmsg)
                 }
@@ -223,7 +224,8 @@ $(function(){
                         // 请空输入框
                         $this.prev().val('');
                         // 关闭
-                        $this.parent().hide()
+                        $this.parent().hide();
+                        updateCommentQuantity()
                     }else {
                         alert(resp.errmsg)
                     }
@@ -242,3 +244,8 @@ $(function(){
 
     })
 });
+
+function updateCommentQuantity() {
+    var quantity = $(".comment_list").length
+    $(".comment_count").html(quantity+"条评论")
+}
