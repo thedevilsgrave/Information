@@ -73,4 +73,7 @@ def create_app(config_name):
     from logic.modules.news import news_blu
     app.register_blueprint(news_blu)
 
+    from logic.modules.personal import user_blu
+    app.register_blueprint(user_blu)
+
     return app
