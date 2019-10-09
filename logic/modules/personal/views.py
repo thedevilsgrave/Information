@@ -7,6 +7,7 @@ from logic.tools.image_storage import storage
 @user_blu.route("/info")
 @user_login_data
 def user_info():
+    """用户信息主页面"""
     user = g.user
     if not user:
         return redirect("/")
@@ -17,6 +18,7 @@ def user_info():
 @user_blu.route("/base_info", methods=["GET", "POST"])
 @user_login_data
 def base_info():
+    """修改用户基本信息"""
     user = g.user
     if not user:
         return redirect("/")
@@ -46,6 +48,7 @@ def base_info():
 @user_blu.route("/pic_info", methods=["POST", "GET"])
 @user_login_data
 def pic_info():
+    """修改用户头像"""
     user = g.user
     user_avatar_url = "http://oyucyko3w.bkt.clouddn.com/"
     if request.method == "GET":
@@ -68,3 +71,33 @@ def pic_info():
     user.avatar_url = key
 
     return jsonify(errno="2000", errmsg="OK", data={"avatar_url": user_avatar_url+key})
+
+
+@user_blu.route("/change_pwd", methods=["POST", "GET"])
+@user_login_data
+def change_pwd():
+    """用户修改密码"""
+    user = g.user
+    if not user:
+        return redirect("/")
+    if request.method == "GET":
+        return render_template("news/user_pass_info.html")
+
+    # 1. 获取参数
+    old_pwd = request.json.get("old_password")
+    new_pwd = request.json.get("new_password")
+
+    # 2. 判断参数
+    if not all([old_pwd, new_pwd]):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    # 3. 判断旧密码是否正确
+    if not user.check_passowrd(old_pwd):
+        return jsonify(errno="5455", errmsg="旧密码错误")
+
+    # 4. 设置新密码
+    user.password = new_pwd
+
+    return jsonify(errno="2000", errmsg="OK")
+
+
