@@ -1,4 +1,4 @@
-from flask import render_template, g, redirect, request, jsonify
+from flask import render_template, g, redirect, request, jsonify, current_app
 from logic.tools.common import user_login_data
 from logic.modules.personal import user_blu
 from logic.tools.image_storage import storage
@@ -100,4 +100,40 @@ def change_pwd():
 
     return jsonify(errno="2000", errmsg="OK")
 
+
+@user_blu.route("/user_collection", methods=["GET"])
+@user_login_data
+def user_collection():
+    user = g.user
+
+    # 1. 获取参数
+    page = request.args.get("p", 1)
+
+    # 2. 判断参数
+    try:
+        page = int(page)
+    except Exception as err:
+        current_app.logger.error(err)
+        page = 1
+
+    # 3. 查询用户指定的新闻收藏页
+    try:
+        paginate = user.collection_news.paginate(page, 8, False)
+        current_page = paginate.page  # 显示第几页
+        total_page = paginate.pages  # 总页数
+        news_list = paginate.items  # 查询出的新闻列表对象
+    except Exception as err:
+        current_app.logger.error(err)
+
+    news_dict_li = []
+    for news in news_list:
+        news_dict_li.append(news.to_basic_dict())
+
+    data = {
+        "current_page": current_page,
+        "total_page": total_page,
+        "news_collection": news_dict_li
+    }
+
+    return render_template("news/user_collection.html", data=data)
 
