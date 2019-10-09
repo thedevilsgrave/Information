@@ -23,15 +23,15 @@ def index():
     #         current_app.logger.error(err)
     user = g.user
 
-    news_list = []
+    news_list_li = []
 
     try:
-        news_list = News.query.order_by(News.clicks.desc()).limit(8)
+        news_list_li = News.query.order_by(News.clicks.desc()).limit(8)
     except Exception as err:
         current_app.logger.error(err)
 
     news_dict = []
-    for news in news_list:
+    for news in news_list_li:
         news_dict.append(news.to_basic_dict())
 
     # 查询分类数据,通过模板渲染出来
@@ -72,7 +72,7 @@ def news_list():
         current_app.logger.error(er)
         return jsonify(errno="5000", errmsg="参数错误")
 
-    filters = []
+    filters = [News.status == 0]
     # 查询的不是最新的数据
     if cid !=1:
         # 需要添加条件

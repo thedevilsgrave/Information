@@ -5,7 +5,7 @@ access_key = 'yV4GmNBLOgQK-1Sn3o4jktGLFdFSrlywR2C-hvsW'
 secret_key = 'bixMURPL6tHjrb8QKVg2tm7n9k8C7vaOeQ4MEoeW'
 
 # 要上传的空间
-bucket_name = 'ihome'
+bucket_name = 'iHome'
 
 
 def storage(data):
