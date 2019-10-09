@@ -7,7 +7,6 @@ from logic.tools.image_storage import storage
 from logic.models import User, News, Category, Comment, CommentLike
 
 
-
 @user_blu.route("/info")
 @user_login_data
 def user_info():
