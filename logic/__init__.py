@@ -84,4 +84,7 @@ def create_app(config_name):
     from logic.modules.personal import user_blu
     app.register_blueprint(user_blu)
 
+    from logic.modules.admin import admin_blu
+    app.register_blueprint(admin_blu)
+
     return app
