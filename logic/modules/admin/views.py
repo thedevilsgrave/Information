@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import render_template, request, redirect, current_app, session, url_for, g
 from logic.models import User
@@ -90,9 +90,35 @@ def user_count():
     except Exception as err:
         current_app.logger.error(err)
 
+    active_count = []
+    active_time = []
+    datetime.now()
+    # 去今天活跃的用户数据
+    # 获取今天00:00:00
+    now_date = datetime.strptime(datetime.now().strftime('%Y-%m-%d'), '%Y-%m-%d')
+    # 依次添加数据，再反转
+    for i in range(0, 31):
+        begin_date = now_date - timedelta(days=i)
+        end_date = now_date - timedelta(days=(i - 1))
+        active_time.append(begin_date.strftime('%Y-%m-%d'))
+        count = 0
+        try:
+            count = User.query.filter(User.is_admin == False, User.last_login >= begin_date,
+                                      User.last_login < end_date).count()
+        except Exception as e:
+            current_app.logger.error(e)
+        active_count.append(count)
+
+    # 让最近的一天显示在最后面
+    active_time.reverse()
+    active_count.reverse()
+
     data = {
         "user_total": user_total,
         "mouth_total": mouth_total,
-        "day_total": day_total
+        "day_total": day_total,
+        "active_time": active_time,
+        "active_count": active_count
     }
+
     return render_template("admin/user_count.html", data=data)

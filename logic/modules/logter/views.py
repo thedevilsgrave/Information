@@ -148,8 +148,8 @@ def login():
     if not all([mobile, password]):
         return jsonify(errno="4100", errmsg="参数错误")
     # 2.1 校验手机号是否输入正确
-    # if not re.match("^1[3578][0-9]{9}$", mobile):
-    #     return jsonify(errno="4105", errmsg="参数错误")
+    if not re.match("^1[3578][0-9]{9}$", mobile):
+        return jsonify(errno="4105", errmsg="参数错误")
     # 2.2 查询数据库中是否有这个用户
     try:
         user = User.query.filter(User.mobile == mobile).first()
