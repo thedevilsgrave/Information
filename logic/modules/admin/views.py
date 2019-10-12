@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from flask import render_template, request, redirect, current_app, session, url_for, g
-from logic.models import User
+from logic.models import User, News
 from logic.modules.admin import admin_blu
 from logic.tools.common import user_login_data
 import time
@@ -161,3 +161,46 @@ def user_list():
     }
 
     return render_template("admin/user_list.html", data=data)
+
+
+@admin_blu.route("/news_review")
+def news_review():
+    page = request.args.get("page", 1)
+    key_words = request.args.get("key_words", None)
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    news_list = []
+    current_page = 1
+    total_page = 1
+    filters = [News.status != 0]
+
+    # 如果关键字存在,那么就吧关键字添加到条件中
+    if key_words:
+        filters.append(News.title.contains(key_words))
+
+    try:
+        paginate = News.query.filter(*filters) \
+            .order_by(News.create_time.desc()) \
+            .paginate(page, 10, False)
+
+        news_list = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_review_dict())
+
+    context = {"total_page": total_page,
+               "current_page": current_page,
+               "news_list": news_dict_list
+           }
+
+    return render_template('admin/news_review.html', data=context)
+
