@@ -64,6 +64,7 @@ def index():
 @admin_blu.route("/user_count")
 @user_login_data
 def user_count():
+    """日活跃&月活跃用户显示"""
     user = g.user
 
     user_total = 0
@@ -122,3 +123,41 @@ def user_count():
     }
 
     return render_template("admin/user_count.html", data=data)
+
+
+@admin_blu.route("/user_list")
+def user_list():
+    """所有用户列表"""
+
+    # 接收参数
+    page = request.args.get("page", 1)
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 设置变量默认值
+    users = []
+    current_page = 1
+    total_page = 1
+
+    try:
+        paginate = User.query.filter(User.is_admin==False).order_by(User.last_login.desc()).paginate(page, 10, False)
+        users = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as err:
+        current_app.logger.error(err)
+
+    user_lists = []
+    for user in users:
+        user_lists.append(user.to_admin_dict())
+
+    data = {
+        "current_page": current_page,
+        "total_page": total_page,
+        "user_lists": user_lists
+    }
+
+    return render_template("admin/user_list.html", data=data)
