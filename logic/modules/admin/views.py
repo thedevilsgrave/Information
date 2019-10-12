@@ -165,6 +165,7 @@ def user_list():
 
 @admin_blu.route("/news_review")
 def news_review():
+    """审核页面显示"""
     page = request.args.get("page", 1)
     key_words = request.args.get("key_words", None)
     try:
@@ -203,4 +204,25 @@ def news_review():
            }
 
     return render_template('admin/news_review.html', data=context)
+
+
+@admin_blu.route("/news_review_detail/<int:news_id>")
+def news_review_detail(news_id):
+    """详细审核页面显示"""
+    if request.method == "GET":
+        # 获取新闻id
+        # 通过id查询新闻
+        news = None
+        try:
+            news = News.query.get(news_id)
+        except Exception as e:
+            current_app.logger.error(e)
+
+        if not news:
+            return render_template('admin/news_review_detail.html', data={"errmsg": "未查询到此新闻"})
+
+        # 返回数据
+        data = {"news": news.to_dict()}
+        return render_template('admin/news_review_detail.html', data=data)
+
 
