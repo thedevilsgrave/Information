@@ -263,3 +263,46 @@ def news_review_action():
         news.reason = reason
 
     return jsonify(errno="2000", errmsg="ok")
+
+
+@admin_blu.route("/news_edit")
+def news_edit():
+    """审核板式编辑页面显示"""
+    page = request.args.get("page", 1)
+    key_words = request.args.get("key_words", None)
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    news_list = []
+    current_page = 1
+    total_page = 1
+    filters = [News.status == 0]
+
+    # 如果关键字存在,那么就吧关键字添加到条件中
+    if key_words:
+        filters.append(News.title.contains(key_words))
+
+    try:
+        paginate = News.query.filter(*filters) \
+            .order_by(News.clicks.desc()) \
+            .paginate(page, 10, False)
+
+        news_list = paginate.items
+        current_page = paginate.page
+        total_page = paginate.pages
+    except Exception as e:
+        current_app.logger.error(e)
+
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_basic_dict())
+
+    context = {"total_page": total_page,
+               "current_page": current_page,
+               "news_list": news_dict_list
+           }
+
+    return render_template('admin/news_edit.html', data=context)
