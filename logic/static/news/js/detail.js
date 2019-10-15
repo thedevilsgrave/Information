@@ -182,9 +182,12 @@ $(function(){
                 success: function (resp) {
                     if (resp.errno == "2000") {
                         // 更新点赞按钮图标
-                        var like_count = $this.attr('data-likecount')
+                        var like_count = $this.attr('data-likecount');
+                        if (like_count == undefined){
+                            like_count = 0;
+                        }
                         // 更新点赞按钮图标
-                        if (action == "add") {
+                        if (action === "add") {
                             like_count = parseInt(like_count) + 1
                             // 代表是点赞
                             $this.addClass('has_comment_up')
@@ -199,7 +202,7 @@ $(function(){
                         }else {
                             $this.html(like_count)
                         }
-                        }else if (resp.errno == "5465"){
+                        }else if (resp.errno === "5465"){
                             $('.login_form_con').show();
                         }else {
                         alert(resp.errmsg)
