@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import render_template, request, redirect, current_app, session, url_for, g
+from flask import render_template, request, redirect, current_app, session, url_for, g, jsonify
 from logic.models import User, News
 from logic.modules.admin import admin_blu
 from logic.tools.common import user_login_data
@@ -226,3 +226,40 @@ def news_review_detail(news_id):
         return render_template('admin/news_review_detail.html', data=data)
 
 
+@admin_blu.route("/news_review_action", methods=["POST"])
+def news_review_action():
+    """审核逻辑"""
+    # 1. 获取参数
+    news_id = request.json.get("news_id")
+    action = request.json.get("action")
+
+    # 2. 判断参数
+    if not all([news_id, action]):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    if action not in ("accept", "refuse"):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    # 3. 查询指定的新闻对象
+    try:
+        news = News.query.get(news_id)
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="5600", errmsg="数据查询错误")
+
+    if not news:
+        current_app.logger.error("没有该数据")
+        return jsonify(errno="3500", errmsg="没有该数据")
+
+    if action == "accept":
+        # 审核通过
+        news.status = 0
+    else:
+        # 审核不通过
+        reason = request.json.get("reason")
+        if not reason:
+            return jsonify(errno="3600", errmsg="请输入原因")
+        news.status = -1
+        news.reason = reason
+
+    return jsonify(errno="2000", errmsg="ok")
