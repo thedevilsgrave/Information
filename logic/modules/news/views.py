@@ -245,3 +245,47 @@ def comment_like():
         return jsonify(errno="5100", errmsg="数据库操作失败")
     return jsonify(errno="2000", errmsg="点赞成功!")
 
+
+@news_blu.route('/followed_user', methods=["POST"])
+@user_login_data
+def followed_user():
+    """关注/取消关注用户"""
+    if not g.user:
+        return jsonify(errno="3500", errmsg="用户未登录")
+
+    user_id = request.json.get("user_id")
+    action = request.json.get("action")
+
+    if not all([user_id, action]):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    if action not in ("follow", "unfollow"):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    # 查询到关注的用户信息
+    try:
+        target_user = User.query.get(user_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno="4500", errmsg="查询数据库失败")
+
+    if not target_user:
+        return jsonify(errno="3000", errmsg="未查询到用户数据")
+
+    # 根据不同操作做不同逻辑
+    if action == "follow":
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            return jsonify(errno="3540", errmsg="当前已关注")
+        target_user.followers.append(g.user)
+    else:
+        if target_user.followers.filter(User.id == g.user.id).count() > 0:
+            target_user.followers.remove(g.user)
+
+    # 保存到数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno="3100", errmsg="数据保存错误")
+
+    return jsonify(errno="2000", errmsg="操作成功")

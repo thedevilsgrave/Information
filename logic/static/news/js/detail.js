@@ -4,79 +4,79 @@ function getCookie(name) {
 }
 
 
-$(function(){
+$(function () {
     // 打开登录框
     $('.comment_form_logout').click(function () {
         $('.login_form_con').show();
     });
 
     // 收藏
-    $(function(){
-    // 收藏
-    $(".collection").click(function () {
-        var news_id = $(".collection").attr('data-newid');
-        var action = "collect";
-        var params = {
-            "news_id": news_id,
-            "action": action
-        };
-        $.ajax({
-            url: "/news/news_collect",
-            method: "post",
-            contentType: "application/json",
-            headers: {
-                "X-CSRFToken": getCookie("csrf_token")
-            },
-            data: JSON.stringify(params),
-            success: function (resp) {
-                if (resp.errno == "2000") {
-                    // 收藏成功
-                    // 隐藏收藏按钮
-                    $(".collection").hide();
-                    // 显示取消收藏按钮
-                    $(".collected").show();
-                }else if (resp.errno == "5465"){
-                    $('.login_form_con').show();
-                }else{
-                    alert(resp.errmsg);
+    $(function () {
+        // 收藏
+        $(".collection").click(function () {
+            var news_id = $(".collection").attr('data-newid');
+            var action = "collect";
+            var params = {
+                "news_id": news_id,
+                "action": action
+            };
+            $.ajax({
+                url: "/news/news_collect",
+                method: "post",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": getCookie("csrf_token")
+                },
+                data: JSON.stringify(params),
+                success: function (resp) {
+                    if (resp.errno == "2000") {
+                        // 收藏成功
+                        // 隐藏收藏按钮
+                        $(".collection").hide();
+                        // 显示取消收藏按钮
+                        $(".collected").show();
+                    } else if (resp.errno == "5465") {
+                        $('.login_form_con').show();
+                    } else {
+                        alert(resp.errmsg);
+                    }
                 }
-            }
+            })
+        });
+
+        // 取消收藏
+        $(".collected").click(function () {
+            var news_id = $(".collected").attr('data-newid');
+            var action = "cancel_collect";
+            var params = {
+                "news_id": news_id,
+                "action": action
+            };
+            $.ajax({
+                url: "/news/news_collect",
+                method: "post",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": getCookie("csrf_token")
+                },
+                data: JSON.stringify(params),
+                success: function (resp) {
+                    if (resp.errno == "2000") {
+                        // 收藏成功
+                        // 显示收藏按钮
+                        $(".collection").show();
+                        // 隐藏取消收藏按钮
+                        $(".collected").hide();
+                    } else if (resp.errno == "5465") {
+                        $('.login_form_con').show();
+                    } else {
+                        alert(resp.errmsg);
+                    }
+                }
+            })
         })
     });
-
-    // 取消收藏
-    $(".collected").click(function () {
-        var news_id = $(".collected").attr('data-newid');
-        var action = "cancel_collect";
-        var params = {
-            "news_id": news_id,
-            "action": action
-        };
-        $.ajax({
-            url: "/news/news_collect",
-            method: "post",
-            contentType: "application/json",
-            headers: {
-                "X-CSRFToken": getCookie("csrf_token")
-            },
-            data: JSON.stringify(params),
-            success: function (resp) {
-                if (resp.errno == "2000") {
-                    // 收藏成功
-                    // 显示收藏按钮
-                    $(".collection").show();
-                    // 隐藏取消收藏按钮
-                    $(".collected").hide();
-                }else if (resp.errno == "5465"){
-                    $('.login_form_con').show();
-                }else{
-                    alert(resp.errmsg);
-                }
-            }
-        })
-    })
-});
-        // 评论提交
+    // 评论提交
     $(".comment_form").submit(function (e) {
         e.preventDefault();
         var news_id = $(this).attr('data-newsid');
@@ -107,7 +107,7 @@ $(function(){
                     comment_html += '<div class="person_pic fl">'
                     if (comment.user.avatar_url) {
                         comment_html += '<img src="' + comment.user.avatar_url + '" alt="用户图标">'
-                    }else {
+                    } else {
                         comment_html += '<img src="../../static/news/images/person01.png" alt="用户图标">'
                     }
                     comment_html += '</div>'
@@ -133,34 +133,30 @@ $(function(){
                     // 清空输入框内容
                     $(".comment_input").val("");
                     updateCommentQuantity()
-                }else {
+                } else {
                     alert(resp.errmsg)
                 }
             }
         })
     });
 
-    $('.comment_list_con').delegate('a,input','click',function(){
+    $('.comment_list_con').delegate('a,input', 'click', function () {
 
         var sHandler = $(this).prop('class');
 
-        if(sHandler.indexOf('comment_reply')>=0)
-        {
+        if (sHandler.indexOf('comment_reply') >= 0) {
             $(this).next().toggle();
         }
 
-        if(sHandler.indexOf('reply_cancel')>=0)
-        {
+        if (sHandler.indexOf('reply_cancel') >= 0) {
             $(this).parent().toggle();
         }
 
-        if(sHandler.indexOf('comment_up')>=0)
-        {
+        if (sHandler.indexOf('comment_up') >= 0) {
             // alert("点赞!@_@")
             var $this = $(this);
             var action = "add"
-            if(sHandler.indexOf('has_comment_up')>=0)
-            {
+            if (sHandler.indexOf('has_comment_up') >= 0) {
                 // 如果当前该评论已经是点赞状态，再次点击会进行到此代码块内，代表要取消点赞
                 action = "remove"
             }
@@ -183,7 +179,7 @@ $(function(){
                     if (resp.errno == "2000") {
                         // 更新点赞按钮图标
                         var like_count = $this.attr('data-likecount');
-                        if (like_count == undefined){
+                        if (like_count == undefined) {
                             like_count = 0;
                         }
                         // 更新点赞按钮图标
@@ -191,7 +187,7 @@ $(function(){
                             like_count = parseInt(like_count) + 1
                             // 代表是点赞
                             $this.addClass('has_comment_up')
-                        }else {
+                        } else {
                             like_count = parseInt(like_count) - 1
                             $this.removeClass('has_comment_up')
                         }
@@ -199,20 +195,19 @@ $(function(){
                         $this.attr('data-likecount', like_count)
                         if (like_count == 0) {
                             $this.html("赞")
-                        }else {
+                        } else {
                             $this.html(like_count)
                         }
-                        }else if (resp.errno === "5465"){
-                            $('.login_form_con').show();
-                        }else {
+                    } else if (resp.errno === "5465") {
+                        $('.login_form_con').show();
+                    } else {
                         alert(resp.errmsg)
                     }
                 }
             })
         }
 
-        if(sHandler.indexOf('reply_sub')>=0)
-        {
+        if (sHandler.indexOf('reply_sub') >= 0) {
             var $this = $(this);
             var news_id = $this.parent().attr('data-newsid');
             var parent_id = $this.parent().attr('data-commentid');
@@ -271,7 +266,7 @@ $(function(){
                         // 关闭
                         $this.parent().hide();
                         updateCommentQuantity()
-                    }else {
+                    } else {
                         alert(resp.errmsg)
                     }
                 }
@@ -279,18 +274,76 @@ $(function(){
         }
     });
 
-        // 关注当前新闻作者
+    // 关注当前新闻作者
     $(".focus").click(function () {
-
+        var user_id = $(this).attr('data-userid')
+        var params = {
+            "action": "follow",
+            "user_id": user_id
+        }
+        $.ajax({
+            url: "/news/followed_user",
+            method: "post",
+            contentType: "application/json",
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
+            data: JSON.stringify(params),
+            success: function (resp) {
+                if (resp.errno == "2000") {
+                    // 关注成功
+                    var count = parseInt($(".follows b").html());
+                    count++;
+                    $(".follows b").html(count + "")
+                    $(".focus").hide()
+                    $(".focused").show()
+                } else if (resp.errno == "4101") {
+                    // 未登录，弹出登录框
+                    $('.login_form_con').show();
+                } else {
+                    // 关注失败
+                    alert(resp.errmsg)
+                }
+            }
+        })
     });
 
     // 取消关注当前新闻作者
     $(".focused").click(function () {
-
+        var user_id = $(this).attr('data-userid')
+        var params = {
+            "action": "unfollow",
+            "user_id": user_id
+        }
+        $.ajax({
+            url: "/news/followed_user",
+            method: "post",
+            contentType: "application/json",
+            headers: {
+                "X-CSRFToken": getCookie("csrf_token")
+            },
+            data: JSON.stringify(params),
+            success: function (resp) {
+                if (resp.errno == "2000") {
+                    // 取消关注成功
+                    var count = parseInt($(".follows b").html());
+                    count--;
+                    $(".follows b").html(count + "")
+                    $(".focus").show()
+                    $(".focused").hide()
+                } else if (resp.errno == "4101") {
+                    // 未登录，弹出登录框
+                    $('.login_form_con').show();
+                } else {
+                    // 取消关注失败
+                    alert(resp.errmsg)
+                }
+            }
+        })
     })
 });
 
 function updateCommentQuantity() {
     var quantity = $(".comment_list").length
-    $(".comment_count").html(quantity+"条评论")
+    $(".comment_count").html(quantity + "条评论")
 }
