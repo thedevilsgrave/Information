@@ -310,3 +310,15 @@ def user_follow():
             "current_page": current_page
             }
     return render_template('news/user_follow.html', data=data)
+
+
+@user_blu.route('/other_info')
+@user_login_data
+def other_info():
+
+    user = g.user
+
+    data = {
+        "user": user.to_dict() if user else None
+    }
+    return render_template("news/other.html", data=data)
