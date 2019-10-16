@@ -1,5 +1,5 @@
 from flask import render_template, g, redirect, request, jsonify, current_app
-
+from flask import abort
 from logic import db
 from logic.tools.common import user_login_data
 from logic.modules.personal import user_blu
@@ -315,10 +315,84 @@ def user_follow():
 @user_blu.route('/other_info')
 @user_login_data
 def other_info():
-
+    """其他用户信息"""
     user = g.user
+    other = None
+    is_follwo = False
+
+    # 获取参数,其他用户的id
+    other_id = request.args.get("user_id")
+    if not other_id:
+        abort(404)
+
+    try:
+        other = User.query.get(other_id)
+    except Exception as err:
+        current_app.logger.error(err)
+
+    if not other:
+        abort(404)
+
+    if other and user:
+        if other in user.followed:
+            is_follwo = True
 
     data = {
-        "user": user.to_dict() if user else None
+        "user": user.to_dict() if user else None,
+        "other": other.to_dict(),
+        "is_followed": is_follwo
     }
     return render_template("news/other.html", data=data)
+
+
+@user_blu.route("/other_news_list")
+def other_news_list():
+    """返回其他用户新闻列表"""
+
+    other_id = request.args.get("user_id")
+    page = request.args.get("page", 1)
+    current_page = 1
+    total_page = 1
+    news__dict_li = []
+
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    if not all([page, other_id]):
+        return jsonify(errno="3500", errmsg="参数错误")
+
+    try:
+        other = User.query.get(other_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno="3500", errmsg="数据查询错误")
+
+    if not other:
+        return jsonify(errno="3500", errmsg="用户不存在")
+
+    try:
+        paginate = other.news_list.paginate(page, 10, False)
+        # 获取当前页
+        current_page = paginate.page
+        # 获取总页数
+        total_page = paginate.pages
+        # 获取新闻列表
+        news_li = paginate.items
+    except Exception as err:
+        current_app.logger.error(err)
+        return jsonify(errno="3500", errmsg="数据查询错误")
+
+    for news in news_li:
+        news__dict_li.append(news.to_review_dict())
+
+    data = {
+        "news_list": news__dict_li,
+        "current_page": current_page,
+        "total_page": total_page
+    }
+
+    return jsonify(errno="2000", errmsg="ok", data=data)
+
