@@ -415,3 +415,70 @@ def news_edit_detail():
         return jsonify(errno="3500", errmsg="保存数据失败")
     # 5. 返回结果
     return jsonify(errno="2000", errmsg="编辑成功")
+
+
+@admin_blu.route("/news_type", methods=["POST", "GET"])
+def news_type():
+
+    if request.method == "GET":
+        # 查询分类数据
+        try:
+            categories = Category.query.all()
+        except Exception as err:
+            current_app.logger.error(err)
+            return render_template("admin/news_type.html", errmsg="查询错误")
+        if not categories:
+            return render_template("admin/news_type.html", errmsg="未查到数据")
+
+        categories_li = []
+        for category in categories:
+            c_dict = category.to_dict()
+            categories_li.append(c_dict)
+        # 移除`最新`分类
+        categories_li.pop(0)
+
+        data = {
+            "categories": categories_li
+        }
+        return render_template("admin/news_type.html", data=data)
+
+    # 如果是POST请求则添加或修改分类
+    # 1. 获取参数
+    category_name = request.json.get("name")
+    category_id = request.json.get("id")
+
+    # 如果category_id有值,代表要修改分类
+    if category_id:
+        try:
+            category_id = int(category_id)
+        except Exception as err:
+            current_app.logger.error(err)
+            return jsonify(errno="3500", errmsg="参数错误")
+
+        try:
+            category = Category.query.get(category_id)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno="3500", errmsg="查询数据失败")
+
+        if not category:
+            return jsonify(errno="3500", errmsg="未查询到分类信息")
+        category.name = category_name
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return jsonify(errno="3500", errmsg="保存数据失败")
+    else:
+        # 如果没有值代表要添加分类
+        category = Category()
+        category.name = category_name
+        try:
+            db.session.add(category)
+        except Exception as err:
+            db.session.rollback()
+            current_app.logger.error(err)
+
+    return jsonify(errno="2000", errmsg="ok")
